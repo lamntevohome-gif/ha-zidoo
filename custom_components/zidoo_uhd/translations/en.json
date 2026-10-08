@@ -1,0 +1,63 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Zidoo",
+        "description": "Enter the Zidoo player's IP address (API port 9529).",
+        "data": {
+          "host": "Host",
+          "name": "Name",
+          "psk": "Control password (if set)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect. Check the IP and that the player is on."
+    },
+    "abort": {
+      "already_configured": "Device already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "data": {
+          "off_mode": "When turning off"
+        }
+      }
+    }
+  },
+  "selector": {
+    "off_mode": {
+      "options": {
+        "standby": "Standby (fast wake)",
+        "poweroff": "Power off"
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "audio_track": {
+        "name": "Audio track"
+      },
+      "subtitle": {
+        "name": "Subtitle"
+      },
+      "audio_output": {
+        "name": "Audio output"
+      }
+    },
+    "button": {
+      "tv_input": {
+        "name": "Switch TV to Zidoo"
+      },
+      "next_chapter": {
+        "name": "Next chapter"
+      },
+      "previous_chapter": {
+        "name": "Previous chapter"
+      }
+    }
+  }
+}

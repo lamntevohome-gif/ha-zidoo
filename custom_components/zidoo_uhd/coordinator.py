@@ -1,0 +1,50 @@
+"""Polling coordinator for Zidoo players."""
+from __future__ import annotations
+
+from datetime import timedelta
+import logging
+
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
+
+from .api import ZidooClient, ZidooState
+from .const import DOMAIN, SCAN_INTERVAL_OFF, SCAN_INTERVAL_ON
+
+_LOGGER = logging.getLogger(__name__)
+OUTPUT_REFRESH_EVERY = 15  # polls
+
+
+class ZidooCoordinator(DataUpdateCoordinator[ZidooState]):
+    def __init__(self, hass: HomeAssistant, client: ZidooClient, name: str) -> None:
+        super().__init__(
+            hass, _LOGGER, name=f"{DOMAIN}_{name}",
+            update_interval=timedelta(seconds=SCAN_INTERVAL_ON),
+        )
+        self.client = client
+        self.position_updated_at = None
+        self._polls = 0
+
+    async def _async_update_data(self) -> ZidooState:
+        previous = self.data
+        self._polls += 1
+        state = await self.client.fetch_state(
+            previous, with_outputs=self._polls % OUTPUT_REFRESH_EVERY == 1
+        )
+
+        if state.online and (previous is None or not previous.online):
+            # Player just came online: refresh the app list for source selection.
+            try:
+                await self.client.load_apps()
+            except Exception:  # noqa: BLE001
+                _LOGGER.debug("Could not load app list")
+
+        if state.position is not None and (
+            previous is None or previous.position != state.position
+        ):
+            self.position_updated_at = dt_util.utcnow()
+
+        self.update_interval = timedelta(
+            seconds=SCAN_INTERVAL_ON if state.online else SCAN_INTERVAL_OFF
+        )
+        return state

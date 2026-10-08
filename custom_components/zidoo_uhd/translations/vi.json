@@ -1,0 +1,63 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Zidoo",
+        "description": "Nhập IP của đầu Zidoo (API cổng 9529).",
+        "data": {
+          "host": "Địa chỉ IP",
+          "name": "Tên",
+          "psk": "Mật khẩu điều khiển (nếu có)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Không kết nối được. Kiểm tra IP và đầu Zidoo đang bật."
+    },
+    "abort": {
+      "already_configured": "Thiết bị đã được thêm."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Tùy chọn",
+        "data": {
+          "off_mode": "Khi tắt"
+        }
+      }
+    }
+  },
+  "selector": {
+    "off_mode": {
+      "options": {
+        "standby": "Standby (bật lại nhanh)",
+        "poweroff": "Tắt hẳn"
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "audio_track": {
+        "name": "Track âm thanh"
+      },
+      "subtitle": {
+        "name": "Phụ đề"
+      },
+      "audio_output": {
+        "name": "Ngõ ra âm thanh"
+      }
+    },
+    "button": {
+      "tv_input": {
+        "name": "Chuyển TV sang Zidoo"
+      },
+      "next_chapter": {
+        "name": "Chapter kế tiếp"
+      },
+      "previous_chapter": {
+        "name": "Chapter trước"
+      }
+    }
+  }
+}
