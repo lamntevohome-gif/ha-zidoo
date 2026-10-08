@@ -1,7 +1,6 @@
 """Polling coordinator for Zidoo players."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -27,17 +26,6 @@ class ZidooCoordinator(DataUpdateCoordinator[ZidooState]):
         self._polls = 0
         # Last app opened from Home Assistant (the API cannot report the foreground app).
         self.last_app: str | None = None
-
-    async def async_turn_on(self) -> None:
-        """Wake the player, then poll quickly so the state follows the boot."""
-        if await self.client.turn_on():
-            await self.async_request_refresh()
-            return
-        for _ in range(12):  # up to ~60 s for the player to boot
-            await asyncio.sleep(5)
-            await self.async_refresh()
-            if self.data and self.data.online:
-                return
 
     def set_last_app(self, app: str | None) -> None:
         self.last_app = app

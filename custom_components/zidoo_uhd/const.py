@@ -11,15 +11,8 @@ API_PORT = 9529
 
 CONF_PSK = "psk"
 CONF_OFF_MODE = "off_mode"
-OFF_POWER_KEY = "power_key"  # same as the power button on the remote
 OFF_STANDBY = "standby"
 OFF_POWEROFF = "poweroff"
-DEFAULT_OFF_MODE = OFF_POWER_KEY
-OFF_KEYS = {
-    OFF_POWER_KEY: "Key.PowerOn",
-    OFF_STANDBY: "Key.PowerOn.Standby",
-    OFF_POWEROFF: "Key.PowerOn.Poweroff",
-}
 
 SCAN_INTERVAL_ON = 2  # seconds while the player answers
 SCAN_INTERVAL_OFF = 10  # seconds while it is off/unreachable
@@ -28,9 +21,8 @@ REQUEST_TIMEOUT = 4
 # Friendly names accepted by remote.send_command -> Zidoo key codes.
 # Any value starting with "Key." is passed through unchanged.
 KEYS: dict[str, str] = {
-    # Physical power button: toggles (turns a running player OFF). Use media_player.turn_on to wake.
     "power": "Key.PowerOn",
-    "power_toggle": "Key.PowerOn",
+    "power_on": "Key.PowerOn",
     "standby": "Key.PowerOn.Standby",
     "power_off": "Key.PowerOn.Poweroff",
     "reboot": "Key.PowerOn.Reboot",

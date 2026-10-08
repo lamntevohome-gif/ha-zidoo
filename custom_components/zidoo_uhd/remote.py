@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ZidooConfigEntry
 from .api import ZidooError
-from .const import CONF_OFF_MODE, DEFAULT_OFF_MODE, OFF_KEYS, SOURCE_HOME, resolve_key
+from .const import SOURCE_HOME, resolve_key
 from .entity import ZidooEntity
 
 
@@ -38,12 +38,16 @@ class ZidooRemote(ZidooEntity, RemoteEntity):
         return self.online
 
     async def async_turn_on(self, activity: str | None = None, **kwargs: Any) -> None:
-        await self.coordinator.async_turn_on()
+        await self.coordinator.client.wake_on_lan()
+        try:
+            await self.coordinator.client.send_key("Key.PowerOn")
+        except ZidooError:
+            pass
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, activity: str | None = None, **kwargs: Any) -> None:
-        mode = self._entry.options.get(CONF_OFF_MODE, DEFAULT_OFF_MODE)
         try:
-            await self.coordinator.client.turn_off(OFF_KEYS.get(mode, OFF_KEYS[DEFAULT_OFF_MODE]))
+            await self.coordinator.client.send_key("Key.PowerOn.Standby")
         except ZidooError as err:
             raise HomeAssistantError(str(err)) from err
         await self.coordinator.async_request_refresh()

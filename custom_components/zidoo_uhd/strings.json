@@ -31,9 +31,8 @@
   "selector": {
     "off_mode": {
       "options": {
-        "power_key": "Power button (like the remote)",
-        "standby": "Standby command",
-        "poweroff": "Power-off command"
+        "standby": "Standby (fast wake)",
+        "poweroff": "Power off"
       }
     }
   },
