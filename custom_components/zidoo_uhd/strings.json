@@ -18,24 +18,6 @@
       "already_configured": "Device already configured."
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Options",
-        "data": {
-          "off_mode": "When turning off"
-        }
-      }
-    }
-  },
-  "selector": {
-    "off_mode": {
-      "options": {
-        "standby": "Standby (fast wake)",
-        "poweroff": "Power off"
-      }
-    }
-  },
   "entity": {
     "select": {
       "audio_track": {

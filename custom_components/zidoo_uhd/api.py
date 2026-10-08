@@ -9,7 +9,7 @@ from typing import Any
 
 import aiohttp
 
-from .const import API_PORT, REQUEST_TIMEOUT
+from .const import API_PORT, POWER_OFF_KEY, REQUEST_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,8 +90,8 @@ class ZidooClient:
             raise ZidooError(f"{path} returned status {data.get('status')}")
 
     # --------------------------------------------------------------- system
-    async def get_model(self) -> dict[str, Any]:
-        data = await self._get("ZidooControlCenter/getModel", timeout=3)
+    async def get_model(self, timeout: float = 3) -> dict[str, Any]:
+        data = await self._get("ZidooControlCenter/getModel", timeout=timeout)
         if data.get("status") != 200:
             raise ZidooError("getModel failed")
         self.info = data
@@ -120,6 +120,24 @@ class ZidooClient:
     async def send_key(self, key: str) -> None:
         await self._ok("ZidooControlCenter/RemoteControl/sendkey", {"key": key})
 
+    async def turn_on(self) -> None:
+        """Power ON = Wake-on-LAN only.
+
+        A magic packet is ignored by a running player, so this can never switch it off
+        (unlike Key.PowerOn, which toggles).
+        """
+        await self.wake_on_lan()
+
+    async def turn_off(self) -> None:
+        """Power OFF = Key.PowerOn.Poweroff only (a one-way shutdown command).
+
+        When the player is already off it has no IP address, so the request just fails.
+        """
+        try:
+            await self.send_key(POWER_OFF_KEY)
+        except ZidooError as err:
+            _LOGGER.debug("Power-off not delivered (%s): player is probably already off", err)
+
     async def wake_on_lan(self, extra_mac: str | None = None) -> None:
         macs = set(self.macs)
         if extra_mac:
@@ -132,11 +150,23 @@ class ZidooClient:
         if not packets:
             return
 
+        # Global broadcast plus the /24 subnet broadcast of the player (e.g. 192.168.1.255),
+        # which is what worked in the manual Wake-on-LAN test.
+        targets = ["255.255.255.255"]
+        parts = self.host.split(".")
+        if len(parts) == 4 and all(p.isdigit() for p in parts):
+            targets.append(".".join(parts[:3] + ["255"]))
+
         def _send() -> None:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
                 for packet in packets:
-                    sock.sendto(packet, ("255.255.255.255", 9))
+                    for target in targets:
+                        for port in (9, 7):
+                            try:
+                                sock.sendto(packet, (target, port))
+                            except OSError as err:
+                                _LOGGER.debug("WOL to %s:%s failed: %s", target, port, err)
 
         await asyncio.get_running_loop().run_in_executor(None, _send)
 

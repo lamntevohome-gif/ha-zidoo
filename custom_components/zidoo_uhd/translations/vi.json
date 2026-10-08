@@ -18,24 +18,6 @@
       "already_configured": "Thiết bị đã được thêm."
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Tùy chọn",
-        "data": {
-          "off_mode": "Khi tắt"
-        }
-      }
-    }
-  },
-  "selector": {
-    "off_mode": {
-      "options": {
-        "standby": "Standby (bật lại nhanh)",
-        "poweroff": "Tắt hẳn"
-      }
-    }
-  },
   "entity": {
     "select": {
       "audio_track": {

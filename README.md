@@ -6,7 +6,7 @@ Custom integration (HACS) điều khiển đầu phát **Zidoo** (UHD8000, UHD50
 
 | Entity | Chức năng |
 |---|---|
-| `media_player` | Bật (Wake-on-LAN + PowerOn), tắt (standby hoặc tắt hẳn), play/pause/stop, next/previous, seek, tăng/giảm/mute âm lượng, chọn app (source), phát file/URL (`play_media`). Hiển thị tên phim/bài hát, thời lượng, vị trí; thuộc tính độ phân giải, fps, định dạng âm thanh |
+| `media_player` | Bật (Wake-on-LAN), tắt (`Key.PowerOn.Poweroff`), play/pause/stop, next/previous, seek, tăng/giảm/mute âm lượng, chọn app (source), phát file/URL (`play_media`). Hiển thị tên phim/bài hát, thời lượng, vị trí; thuộc tính độ phân giải, fps, định dạng âm thanh |
 | `remote` | Gửi mọi phím remote: `home`, `ok`, `up`, `down`, `left`, `right`, `back`, `menu`, `info`, `subtitle`, `audio`, `0`–`9`, `red`/`green`/`yellow`/`blue`… hoặc mã gốc `Key.xxx` |
 | `select` Track âm thanh | Chọn track audio của phim đang phát |
 | `select` Phụ đề | Chọn phụ đề của phim đang phát |
@@ -23,11 +23,18 @@ Custom integration (HACS) điều khiển đầu phát **Zidoo** (UHD8000, UHD50
 
 **Mật khẩu điều khiển** chỉ cần nhập khi bạn có đặt mật khẩu cho điều khiển qua mạng trên Zidoo.
 
-## Bật từ standby
+## Bật / tắt
 
-- Integration gửi Wake-on-LAN tới địa chỉ MAC lấy được lúc cài đặt, kèm thêm phím PowerOn.
-- Trên Zidoo, kiểm tra trong Settings → Other settings → **Power mode**, cho phép đánh thức qua mạng. Nên cắm dây mạng LAN, vì đánh thức qua Wi-Fi kém ổn định hơn.
-- Trong **Configure**, chọn khi tắt là *Standby* để bật lại nhanh và vẫn đánh thức được qua mạng.
+| Lệnh | Integration gửi | Ghi chú |
+|---|---|---|
+| **turn_on** | **Wake-on-LAN** (theo MAC, gửi tới `255.255.255.255` và `x.x.x.255` của mạng) | Zidoo đang bật thì bỏ qua gói tin, nên không bao giờ làm máy tắt |
+| **turn_off** | **`Key.PowerOn.Poweroff`** | Lệnh tắt một chiều. Zidoo đã tắt thì không có IP, lệnh không tới, nên không bao giờ làm máy bật |
+
+- Zidoo cần cắm **dây LAN** để Wake-on-LAN hoạt động; UHD8000 báo `ableRemoteBoot: true`.
+- Nên đặt **DHCP reservation** (IP cố định) cho Zidoo trên router.
+- Home Assistant chạy Docker cần `network_mode: host` để gói Wake-on-LAN ra được mạng LAN.
+- Sau khi turn on, integration theo dõi quá trình khởi động tối đa 90 giây để chuyển sang *on* sớm. Sau khi turn off, entity chuyển *off* ngay.
+- Phím nguồn gốc (`power`, bật/tắt luân phiên) vẫn gửi được qua `remote.send_command` khi cần.
 
 ## Chuyển TV sang Zidoo (HDMI-CEC)
 

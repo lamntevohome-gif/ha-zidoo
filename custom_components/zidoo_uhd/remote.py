@@ -38,19 +38,10 @@ class ZidooRemote(ZidooEntity, RemoteEntity):
         return self.online
 
     async def async_turn_on(self, activity: str | None = None, **kwargs: Any) -> None:
-        await self.coordinator.client.wake_on_lan()
-        try:
-            await self.coordinator.client.send_key("Key.PowerOn")
-        except ZidooError:
-            pass
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_turn_on()
 
     async def async_turn_off(self, activity: str | None = None, **kwargs: Any) -> None:
-        try:
-            await self.coordinator.client.send_key("Key.PowerOn.Standby")
-        except ZidooError as err:
-            raise HomeAssistantError(str(err)) from err
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_turn_off()
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         repeats = kwargs.get(ATTR_NUM_REPEATS, 1)

@@ -10,9 +10,8 @@ SOURCE_HOME = "Home"
 API_PORT = 9529
 
 CONF_PSK = "psk"
-CONF_OFF_MODE = "off_mode"
-OFF_STANDBY = "standby"
-OFF_POWEROFF = "poweroff"
+POWER_OFF_KEY = "Key.PowerOn.Poweroff"  # discrete shutdown (ableRemoteShutdown)
+WOL_BOOT_WAIT = 90  # seconds to follow the boot after Wake-on-LAN
 
 SCAN_INTERVAL_ON = 2  # seconds while the player answers
 SCAN_INTERVAL_OFF = 10  # seconds while it is off/unreachable
@@ -21,10 +20,12 @@ REQUEST_TIMEOUT = 4
 # Friendly names accepted by remote.send_command -> Zidoo key codes.
 # Any value starting with "Key." is passed through unchanged.
 KEYS: dict[str, str] = {
+    # Physical power button: toggles (turns a running player OFF). Use media_player.turn_on to wake.
     "power": "Key.PowerOn",
-    "power_on": "Key.PowerOn",
+    "power_toggle": "Key.PowerOn",
     "standby": "Key.PowerOn.Standby",
     "power_off": "Key.PowerOn.Poweroff",
+    "shutdown": "Key.PowerOn.Poweroff",
     "reboot": "Key.PowerOn.Reboot",
     "home": "Key.Home",
     "back": "Key.Back",

@@ -29,7 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZidooConfigEntry) -> boo
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(_async_reload))
     return True
 
 
@@ -37,5 +36,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ZidooConfigEntry) -> bo
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def _async_reload(hass: HomeAssistant, entry: ZidooConfigEntry) -> None:
-    await hass.config_entries.async_reload(entry.entry_id)
+async def async_migrate_entry(hass: HomeAssistant, entry: ZidooConfigEntry) -> bool:
+    """v1/v2 -> v3: power commands are fixed now (ON = Wake-on-LAN, OFF = Key.PowerOn.Poweroff)."""
+    if entry.version < 3:
+        options = {k: v for k, v in entry.options.items() if k != "off_mode"}
+        hass.config_entries.async_update_entry(entry, options=options, version=3)
+    return True
