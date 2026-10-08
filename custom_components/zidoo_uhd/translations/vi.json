@@ -31,8 +31,9 @@
   "selector": {
     "off_mode": {
       "options": {
-        "standby": "Standby (bật lại nhanh)",
-        "poweroff": "Tắt hẳn"
+        "power_key": "Nút nguồn (như bấm remote)",
+        "standby": "Lệnh standby",
+        "poweroff": "Lệnh tắt hẳn"
       }
     }
   },

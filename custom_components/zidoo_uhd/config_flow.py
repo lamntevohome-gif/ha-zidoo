@@ -14,11 +14,20 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .api import ZidooClient, ZidooError
-from .const import CONF_OFF_MODE, CONF_PSK, DEFAULT_NAME, DOMAIN, OFF_POWEROFF, OFF_STANDBY
+from .const import (
+    CONF_OFF_MODE,
+    CONF_PSK,
+    DEFAULT_NAME,
+    DEFAULT_OFF_MODE,
+    DOMAIN,
+    OFF_POWER_KEY,
+    OFF_POWEROFF,
+    OFF_STANDBY,
+)
 
 
 class ZidooConfigFlow(ConfigFlow, domain=DOMAIN):
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         errors: dict[str, str] = {}
@@ -42,7 +51,7 @@ class ZidooConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=name,
                     data={CONF_HOST: host, CONF_PSK: psk, CONF_NAME: name, CONF_MAC: mac},
-                    options={CONF_OFF_MODE: OFF_STANDBY},
+                    options={CONF_OFF_MODE: DEFAULT_OFF_MODE},
                 )
         schema = vol.Schema(
             {
@@ -63,12 +72,12 @@ class ZidooOptionsFlow(OptionsFlow):
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
             return self.async_create_entry(data=user_input)
-        current = self.config_entry.options.get(CONF_OFF_MODE, OFF_STANDBY)
+        current = self.config_entry.options.get(CONF_OFF_MODE, DEFAULT_OFF_MODE)
         schema = vol.Schema(
             {
                 vol.Required(CONF_OFF_MODE, default=current): SelectSelector(
                     SelectSelectorConfig(
-                        options=[OFF_STANDBY, OFF_POWEROFF], translation_key=CONF_OFF_MODE
+                        options=[OFF_POWER_KEY, OFF_STANDBY, OFF_POWEROFF], translation_key=CONF_OFF_MODE
                     )
                 )
             }

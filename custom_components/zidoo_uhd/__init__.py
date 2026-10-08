@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .api import ZidooClient
-from .const import CONF_PSK, DEFAULT_NAME
+from .const import CONF_OFF_MODE, CONF_PSK, DEFAULT_NAME, DEFAULT_OFF_MODE
 from .coordinator import ZidooCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE, Platform.SELECT, Platform.BUTTON]
@@ -39,3 +39,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ZidooConfigEntry) -> bo
 
 async def _async_reload(hass: HomeAssistant, entry: ZidooConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ZidooConfigEntry) -> bool:
+    """v1 -> v2: the old default (standby key) does not work on every model; use the power key."""
+    if entry.version == 1:
+        options = {**entry.options, CONF_OFF_MODE: DEFAULT_OFF_MODE}
+        hass.config_entries.async_update_entry(entry, options=options, version=2)
+    return True

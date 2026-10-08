@@ -19,8 +19,8 @@ from . import ZidooConfigEntry
 from .api import PLAYING, ZidooError
 from .const import (
     CONF_OFF_MODE,
-    OFF_POWEROFF,
-    OFF_STANDBY,
+    DEFAULT_OFF_MODE,
+    OFF_KEYS,
     SOURCE_HOME,
     SOURCE_MUSIC,
     SOURCE_VIDEO,
@@ -179,9 +179,9 @@ class ZidooMediaPlayer(ZidooEntity, MediaPlayerEntity):
         await self.coordinator.async_turn_on()
 
     async def async_turn_off(self) -> None:
-        mode = self._entry.options.get(CONF_OFF_MODE, OFF_STANDBY)
-        key = "Key.PowerOn.Poweroff" if mode == OFF_POWEROFF else "Key.PowerOn.Standby"
-        await self._run(self.coordinator.client.send_key(key))
+        mode = self._entry.options.get(CONF_OFF_MODE, DEFAULT_OFF_MODE)
+        key = OFF_KEYS.get(mode, OFF_KEYS[DEFAULT_OFF_MODE])
+        await self._run(self.coordinator.client.turn_off(key))
         self.coordinator.set_last_app(None)
 
     async def async_media_play(self) -> None:

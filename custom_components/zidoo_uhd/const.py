@@ -11,8 +11,15 @@ API_PORT = 9529
 
 CONF_PSK = "psk"
 CONF_OFF_MODE = "off_mode"
+OFF_POWER_KEY = "power_key"  # same as the power button on the remote
 OFF_STANDBY = "standby"
 OFF_POWEROFF = "poweroff"
+DEFAULT_OFF_MODE = OFF_POWER_KEY
+OFF_KEYS = {
+    OFF_POWER_KEY: "Key.PowerOn",
+    OFF_STANDBY: "Key.PowerOn.Standby",
+    OFF_POWEROFF: "Key.PowerOn.Poweroff",
+}
 
 SCAN_INTERVAL_ON = 2  # seconds while the player answers
 SCAN_INTERVAL_OFF = 10  # seconds while it is off/unreachable

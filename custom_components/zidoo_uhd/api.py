@@ -142,6 +142,23 @@ class ZidooClient:
         await self.wake_on_lan()
         return False
 
+    async def turn_off(self, key: str) -> None:
+        """Turn the player off. Does nothing if it is already off.
+
+        The power key toggles, so it is only sent while the player answers.
+        If the dedicated standby/power-off key is rejected, fall back to the power key.
+        """
+        if not await self.is_reachable():
+            _LOGGER.debug("Zidoo %s already off, not sending any power command", self.host)
+            return
+        try:
+            await self.send_key(key)
+        except ZidooError as err:
+            if key == "Key.PowerOn":
+                raise
+            _LOGGER.warning("%s rejected (%s), using the power key instead", key, err)
+            await self.send_key("Key.PowerOn")
+
     async def wake_on_lan(self, extra_mac: str | None = None) -> None:
         macs = set(self.macs)
         if extra_mac:
