@@ -63,8 +63,21 @@ data:
   media_content_id: "smb://192.168.1.10/Movies/Dune.mkv"
 ```
 
+## Source đang mở
+
+API của Zidoo không báo app đang hiển thị, nên `source` được xác định như sau:
+
+| Tình huống | `source` | `source_origin` |
+|---|---|---|
+| Đang phát phim bằng trình phát Zidoo | Video player | `player` (chắc chắn) |
+| Đang phát nhạc bằng Music player | Music player | `player` (chắc chắn) |
+| Mở app hoặc bấm Home từ Home Assistant | Tên app / Home | `home_assistant` |
+| Phát xong phim/nhạc, tắt máy, hoặc chưa biết | trống | – |
+
+Nếu bạn mở app bằng remote thật, Home Assistant không biết được. Muốn biết chính xác app đang mở thì phải dùng ADB (integration Android Debug Bridge).
+
 ## Ghi chú
 
 - Trạng thái được cập nhật mỗi 2 giây khi đầu đang bật, 10 giây khi đang tắt.
-- Âm lượng chỉ có tăng/giảm/mute dạng phím, vì API không trả về mức âm lượng hiện tại.
+- **Âm lượng:** nếu máy trả về `volumeData` (UHD8000 có trả về), entity có thanh âm lượng (đọc và đặt mức, thang 0–max của máy), trạng thái mute, và các thuộc tính `volume_raw`, `volume_max`, `volume_output`. Khi xuất bitstream sang ampli, nên chỉnh âm lượng ở ampli.
 - API được tham khảo từ tài liệu nhà phát triển của Zidoo và integration cộng đồng `wizmo2/zidoo-player`.

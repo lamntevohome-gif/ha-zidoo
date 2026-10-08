@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ZidooConfigEntry
 from .api import ZidooError
-from .const import resolve_key
+from .const import SOURCE_HOME, resolve_key
 from .entity import ZidooEntity
 
 
@@ -69,3 +69,5 @@ class ZidooRemote(ZidooEntity, RemoteEntity):
                     await self.coordinator.client.send_key(key)
                 except ZidooError as err:
                     raise HomeAssistantError(f"Zidoo: {err}") from err
+                if key == "Key.Home":
+                    self.coordinator.set_last_app(SOURCE_HOME)

@@ -17,7 +17,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ZidooConfigEntry
 from .api import PLAYING, ZidooError
-from .const import CONF_OFF_MODE, OFF_POWEROFF, OFF_STANDBY
+from .const import (
+    CONF_OFF_MODE,
+    OFF_POWEROFF,
+    OFF_STANDBY,
+    SOURCE_HOME,
+    SOURCE_MUSIC,
+    SOURCE_VIDEO,
+)
 from .entity import ZidooEntity
 
 FEATURES = (
@@ -45,7 +52,6 @@ async def async_setup_entry(
 class ZidooMediaPlayer(ZidooEntity, MediaPlayerEntity):
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
-    _attr_supported_features = FEATURES
 
     def __init__(self, coordinator, entry) -> None:
         super().__init__(coordinator, entry, "media_player")
@@ -53,6 +59,25 @@ class ZidooMediaPlayer(ZidooEntity, MediaPlayerEntity):
     @property
     def _data(self):
         return self.coordinator.data
+
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        data = self._data
+        if data and data.volume_max:
+            return FEATURES | MediaPlayerEntityFeature.VOLUME_SET
+        return FEATURES
+
+    @property
+    def volume_level(self) -> float | None:
+        data = self._data
+        if not data or data.volume is None or not data.volume_max:
+            return None
+        span = data.volume_max - data.volume_min
+        return max(0.0, min(1.0, (data.volume - data.volume_min) / span)) if span else None
+
+    @property
+    def is_volume_muted(self) -> bool | None:
+        return self._data.muted if self._data else None
 
     async def _run(self, coro: Awaitable[Any], refresh: bool = True) -> None:
         try:
@@ -110,12 +135,41 @@ class ZidooMediaPlayer(ZidooEntity, MediaPlayerEntity):
 
     @property
     def source_list(self) -> list[str]:
-        return list(self.coordinator.client.apps)
+        return [SOURCE_HOME, *self.coordinator.client.apps]
+
+    @property
+    def source(self) -> str | None:
+        data = self._data
+        if not data or not data.online:
+            return None
+        if data.mode == "video":
+            return SOURCE_VIDEO
+        if data.mode == "music":
+            return SOURCE_MUSIC
+        return self.coordinator.last_app
+
+    @property
+    def _source_origin(self) -> str | None:
+        data = self._data
+        if data and data.online and data.mode:
+            return "player"  # reported by the Zidoo API
+        if self.coordinator.last_app:
+            return "home_assistant"  # last app opened from Home Assistant
+        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         data = self._data
-        attrs: dict[str, Any] = {"mode": data.mode if data else None}
+        attrs: dict[str, Any] = {
+            "mode": data.mode if data else None,
+            "source_origin": self._source_origin,
+        }
+        if data and data.volume is not None:
+            attrs.update(
+                volume_raw=data.volume,
+                volume_max=data.volume_max,
+                volume_output=data.volume_output,
+            )
         if data and data.mode == "video":
             attrs.update({k: v for k, v in data.video_info.items() if v not in (None, "")})
         return attrs
@@ -134,6 +188,7 @@ class ZidooMediaPlayer(ZidooEntity, MediaPlayerEntity):
         mode = self._entry.options.get(CONF_OFF_MODE, OFF_STANDBY)
         key = "Key.PowerOn.Poweroff" if mode == OFF_POWEROFF else "Key.PowerOn.Standby"
         await self._run(self.coordinator.client.send_key(key))
+        self.coordinator.set_last_app(None)
 
     async def async_media_play(self) -> None:
         await self._run(self.coordinator.client.play(self._data.mode if self._data else None))
@@ -155,18 +210,37 @@ class ZidooMediaPlayer(ZidooEntity, MediaPlayerEntity):
     async def async_media_seek(self, position: float) -> None:
         await self._run(self.coordinator.client.seek(self._data.mode if self._data else None, position))
 
+    async def async_set_volume_level(self, volume: float) -> None:
+        data = self._data
+        if not data or not data.volume_max:
+            raise HomeAssistantError("Zidoo không báo mức âm lượng cho ngõ ra hiện tại")
+        level = round(data.volume_min + volume * (data.volume_max - data.volume_min))
+        await self._run(self.coordinator.client.set_volume(level), refresh=False)
+        data.volume = level  # optimistic; confirmed by the next poll
+        self.async_write_ha_state()
+
     async def async_volume_up(self) -> None:
-        await self._run(self.coordinator.client.send_key("Key.VolumeUp"), refresh=False)
+        await self._run(self.coordinator.client.send_key("Key.VolumeUp"))
 
     async def async_volume_down(self) -> None:
-        await self._run(self.coordinator.client.send_key("Key.VolumeDown"), refresh=False)
+        await self._run(self.coordinator.client.send_key("Key.VolumeDown"))
 
     async def async_mute_volume(self, mute: bool) -> None:
-        # The API only offers a mute toggle key.
+        # The API only offers a mute toggle key: send it only when the state must change.
+        data = self._data
+        if data and data.muted is not None and data.muted == mute:
+            return
         await self._run(self.coordinator.client.send_key("Key.Mute"), refresh=False)
+        if data and data.muted is not None:
+            data.muted = mute  # optimistic; confirmed by the next poll
+            self.async_write_ha_state()
 
     async def async_select_source(self, source: str) -> None:
-        await self._run(self.coordinator.client.open_app(source))
+        if source == SOURCE_HOME:
+            await self._run(self.coordinator.client.send_key("Key.Home"))
+        else:
+            await self._run(self.coordinator.client.open_app(source))
+        self.coordinator.set_last_app(source)
 
     async def async_play_media(self, media_type: MediaType | str, media_id: str, **kwargs: Any) -> None:
         await self._run(self.coordinator.client.play_path(media_id))

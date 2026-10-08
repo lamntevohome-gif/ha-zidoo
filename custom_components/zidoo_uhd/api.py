@@ -38,6 +38,11 @@ class ZidooState:
     subtitle_tracks: dict[int, str] = field(default_factory=dict)
     outputs: dict[str, Any] = field(default_factory=dict)  # name -> tag
     output_current: str | None = None
+    volume: int | None = None
+    volume_min: int = 0
+    volume_max: int | None = None
+    muted: bool | None = None
+    volume_output: str | None = None  # e.g. "HDMI", "XLR"
 
 
 def _tracks(items: list[dict] | None) -> dict[int, str]:
@@ -143,8 +148,10 @@ class ZidooClient:
             return ZidooState(online=False)
 
         state = ZidooState(online=True)
+        music_data = await self._fetch_music_state()
+        self._parse_volume(state, music_data)
         if not await self._fetch_video(state):
-            await self._fetch_music(state)
+            self._fetch_music(state, music_data)
 
         if with_outputs or previous is None:
             await self._fetch_outputs(state)
@@ -191,10 +198,30 @@ class ZidooClient:
         state.subtitle_index = (data.get("subtitle") or {}).get("index")
         return True
 
-    async def _fetch_music(self, state: ZidooState) -> None:
+    async def _fetch_music_state(self) -> dict[str, Any] | None:
         try:
-            data = await self._get("ZidooMusicControl/v2/getState", timeout=2)
+            return await self._get("ZidooMusicControl/v2/getState", timeout=2)
         except ZidooError:
+            return None
+
+    @staticmethod
+    def _parse_volume(state: ZidooState, data: dict[str, Any] | None) -> None:
+        vol = (data or {}).get("volumeData")
+        if not vol or not vol.get("isVolumeEnable", True):
+            return
+        # "currenttVolume" (sic) is the field name used by the Zidoo API.
+        current = vol.get("currenttVolume", vol.get("currentVolume"))
+        maximum = vol.get("maxVolume")
+        if current is None or not maximum:
+            return
+        state.volume = int(current)
+        state.volume_min = int(vol.get("minVolume") or 0)
+        state.volume_max = int(maximum)
+        state.muted = bool(vol.get("isMute"))
+        state.volume_output = vol.get("volumeTag")
+
+    def _fetch_music(self, state: ZidooState, data: dict[str, Any] | None) -> None:
+        if not data:
             return
         music_state = data.get("state")
         music = data.get("playingMusic")
@@ -291,6 +318,9 @@ class ZidooClient:
 
     async def set_output(self, tag: Any) -> None:
         await self._ok("ZidooMusicControl/v2/setOutInputList", {"tag": tag})
+
+    async def set_volume(self, level: int) -> None:
+        await self._ok("ZidooMusicControl/v2/setDevicesVolume", {"volume": level})
 
     async def play_path(self, path: str) -> None:
         """Play a file/URL known to the player (local path, smb://, nfs://, http://)."""

@@ -3,6 +3,10 @@ from __future__ import annotations
 
 DOMAIN = "zidoo_uhd"
 DEFAULT_NAME = "Zidoo UHD8000"
+
+SOURCE_VIDEO = "Video player"
+SOURCE_MUSIC = "Music player"
+SOURCE_HOME = "Home"
 API_PORT = 9529
 
 CONF_PSK = "psk"

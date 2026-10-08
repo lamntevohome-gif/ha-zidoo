@@ -24,6 +24,12 @@ class ZidooCoordinator(DataUpdateCoordinator[ZidooState]):
         self.client = client
         self.position_updated_at = None
         self._polls = 0
+        # Last app opened from Home Assistant (the API cannot report the foreground app).
+        self.last_app: str | None = None
+
+    def set_last_app(self, app: str | None) -> None:
+        self.last_app = app
+        self.async_update_listeners()
 
     async def _async_update_data(self) -> ZidooState:
         previous = self.data
@@ -38,6 +44,12 @@ class ZidooCoordinator(DataUpdateCoordinator[ZidooState]):
                 await self.client.load_apps()
             except Exception:  # noqa: BLE001
                 _LOGGER.debug("Could not load app list")
+
+        if not state.online:
+            self.last_app = None
+        elif previous is not None and previous.mode and not state.mode:
+            # Playback just ended: the player returns to its browser/launcher.
+            self.last_app = None
 
         if state.position is not None and (
             previous is None or previous.position != state.position

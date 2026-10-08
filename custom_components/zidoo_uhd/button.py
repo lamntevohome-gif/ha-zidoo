@@ -55,4 +55,6 @@ class ZidooButton(ZidooEntity, ButtonEntity):
             await self.entity_description.press(self.coordinator.client)
         except ZidooError as err:
             raise HomeAssistantError(f"Zidoo: {err}") from err
+        if self.entity_description.key == "tv_input":
+            self.coordinator.set_last_app("Home")
         await self.coordinator.async_request_refresh()
