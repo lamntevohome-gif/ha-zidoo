@@ -25,7 +25,8 @@ Custom integration (HACS) điều khiển đầu phát **Zidoo** (UHD8000, UHD50
 
 ## Bật từ standby
 
-- Integration gửi Wake-on-LAN tới địa chỉ MAC lấy được lúc cài đặt, kèm thêm phím PowerOn.
+- `turn_on` chỉ gửi **Wake-on-LAN** khi đầu Zidoo không phản hồi. Nếu đầu đang bật thì không gửi gì, vì phím nguồn `Key.PowerOn` là nút bật/tắt và sẽ làm máy đang chạy bị tắt.
+- Phím nguồn gốc vẫn gửi được qua `remote.send_command` với lệnh `power` hoặc `power_toggle` (bấm như nút nguồn thật).
 - Trên Zidoo, kiểm tra trong Settings → Other settings → **Power mode**, cho phép đánh thức qua mạng. Nên cắm dây mạng LAN, vì đánh thức qua Wi-Fi kém ổn định hơn.
 - Trong **Configure**, chọn khi tắt là *Standby* để bật lại nhanh và vẫn đánh thức được qua mạng.
 

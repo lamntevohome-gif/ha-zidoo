@@ -176,13 +176,7 @@ class ZidooMediaPlayer(ZidooEntity, MediaPlayerEntity):
 
     # ------------------------------------------------------------- commands
     async def async_turn_on(self) -> None:
-        client = self.coordinator.client
-        await client.wake_on_lan()
-        try:
-            await client.send_key("Key.PowerOn")
-        except ZidooError:
-            pass  # expected while the player is still asleep; WOL does the job
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_turn_on()
 
     async def async_turn_off(self) -> None:
         mode = self._entry.options.get(CONF_OFF_MODE, OFF_STANDBY)

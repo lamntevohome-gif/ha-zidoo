@@ -21,8 +21,9 @@ REQUEST_TIMEOUT = 4
 # Friendly names accepted by remote.send_command -> Zidoo key codes.
 # Any value starting with "Key." is passed through unchanged.
 KEYS: dict[str, str] = {
+    # Physical power button: toggles (turns a running player OFF). Use media_player.turn_on to wake.
     "power": "Key.PowerOn",
-    "power_on": "Key.PowerOn",
+    "power_toggle": "Key.PowerOn",
     "standby": "Key.PowerOn.Standby",
     "power_off": "Key.PowerOn.Poweroff",
     "reboot": "Key.PowerOn.Reboot",

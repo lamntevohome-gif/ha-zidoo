@@ -90,8 +90,8 @@ class ZidooClient:
             raise ZidooError(f"{path} returned status {data.get('status')}")
 
     # --------------------------------------------------------------- system
-    async def get_model(self) -> dict[str, Any]:
-        data = await self._get("ZidooControlCenter/getModel", timeout=3)
+    async def get_model(self, timeout: float = 3) -> dict[str, Any]:
+        data = await self._get("ZidooControlCenter/getModel", timeout=timeout)
         if data.get("status") != 200:
             raise ZidooError("getModel failed")
         self.info = data
@@ -119,6 +119,28 @@ class ZidooClient:
 
     async def send_key(self, key: str) -> None:
         await self._ok("ZidooControlCenter/RemoteControl/sendkey", {"key": key})
+
+    async def is_reachable(self) -> bool:
+        """True if the player answers its API (it is on and the network is up)."""
+        try:
+            await self.get_model(timeout=3)
+        except ZidooError:
+            try:
+                await self._get("ZidooVideoPlay/getPlayStatus", timeout=2)
+            except ZidooError:
+                return False
+        return True
+
+    async def turn_on(self) -> bool:
+        """Wake the player. Never sends the power key, which toggles a running player off.
+
+        Returns True if the player was already on.
+        """
+        if await self.is_reachable():
+            _LOGGER.debug("Zidoo %s already on, not sending any power command", self.host)
+            return True
+        await self.wake_on_lan()
+        return False
 
     async def wake_on_lan(self, extra_mac: str | None = None) -> None:
         macs = set(self.macs)

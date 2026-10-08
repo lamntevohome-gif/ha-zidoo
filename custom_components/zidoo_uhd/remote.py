@@ -38,12 +38,7 @@ class ZidooRemote(ZidooEntity, RemoteEntity):
         return self.online
 
     async def async_turn_on(self, activity: str | None = None, **kwargs: Any) -> None:
-        await self.coordinator.client.wake_on_lan()
-        try:
-            await self.coordinator.client.send_key("Key.PowerOn")
-        except ZidooError:
-            pass
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_turn_on()
 
     async def async_turn_off(self, activity: str | None = None, **kwargs: Any) -> None:
         try:
